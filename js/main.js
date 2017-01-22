@@ -4,59 +4,42 @@ var renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 
-var fireworks = [];
-function firework() {
-	this.geometry = new THREE.SphereGeometry(0.02, 0.02, 0.02);
-	this.material = new THREE.PointsMaterial();
-	this.mesh = new THREE.Mesh(this.geometry, this.material);
-	this.color = new THREE.Color( (Math.random() + 1) / 2, (Math.random() + 1) / 2, (Math.random() + 1) / 2 );
-	this.mesh.position = new THREE.Vector3( 0, 0, 0 );
-	this.mesh.position.x = Math.random() * 8 - 4;
-	this.mesh.position.y = -7;
-	this.mesh.position.z = -5;
-	this.velocity = new THREE.Vector3( Math.random() * 10 - 5, 9, Math.random() * 5 - 2.5 );
-	this.lifetime = 0;
-	this.explodable = true;
+var stats = new Stats();
+stats.showPanel(0);
+document.body.appendChild(stats.dom);
+
+function clamp(val, min, max) {
+	if (val < min) { return min; }
+	else if (val > max) { return max; }
+	else { return val; }
 }
 
-function explode(f) {
-	for (var i = 0; i < 10; ++i) {
-		var tmp = new firework();
-		tmp.mesh.position.x = f.mesh.position.x;
-		tmp.mesh.position.y = f.mesh.position.y;
-		tmp.mesh.position.z = f.mesh.position.z;
-		tmp.velocity = new THREE.Vector3( Math.random() * 4 - 2, Math.random() * 2 + 1, Math.random() * 4 - 2 );
-		tmp.color = f.color;
-		tmp.material.color = f.color;
-		tmp.explodable = false;
-		f.explodable = false;
-		scene.add(tmp.mesh);
-		fireworks.push(tmp);
-	}
-}
+// initialize terrain
+var t = new terrain();
+scene.add(t.mesh);
+
+var fireworks = [];
+var fireworkLights = [];
 
 camera.position.z = 5;
 
 var clock = new THREE.Clock();
 var timeSinceFirework = 0;
-
-function updateKin(f, delta) {
-	f.mesh.position.x += f.velocity.x * delta;
-	f.mesh.position.y += f.velocity.y * delta;
-	f.mesh.position.z += f.velocity.z * delta;
-	f.velocity.y += -4 * delta;
-}
+var toExplode = 0;
 
 function render() {
+	stats.begin();
 	requestAnimationFrame( render );
 	var delta = clock.getDelta();
 	timeSinceFirework += delta;
-	if (Math.random() > .95) {
+	
+	if (Math.random() > .99 && toExplode < 5) {
 		var tmp = new firework();
 		tmp.material.color = tmp.color;
 		scene.add(tmp.mesh);
 		fireworks.push(tmp);
 		timeSinceFirework = 0;
+		toExplode++;
 	}
 
 	for (var i = 0; i < fireworks.length; ++i) {
@@ -68,11 +51,24 @@ function render() {
 		}
 		if (f.velocity.y < 0.001 && f.explodable) {
 			explode(f);
+			toExplode--;
 			scene.remove(f.mesh);
 			fireworks.splice(i, 1);
 		}
 		updateKin(f, delta);
 	}
+
+	for (var i = 0; i < fireworkLights.length; ++i) {
+		var l = fireworkLights[i];
+		l.lifetime += delta;
+		l.light.intensity = clamp(1/(l.lifetime*2), 0, .5);
+		if (l.lifetime > 5) {
+			scene.remove(l.light);
+			fireworkLights.splice(i, 1);
+		}
+	}
+
 	renderer.render( scene, camera );
+	stats.end();
 }
 render();

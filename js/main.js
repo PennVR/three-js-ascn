@@ -1,3 +1,8 @@
+var EXPLODE_PARTICLES = 20;
+var FADE = true;
+var FADE_RATE = 100;
+var EXPLODE_MOMENTUM = false;
+
 var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 var renderer = new THREE.WebGLRenderer();
@@ -33,7 +38,7 @@ function render() {
 	var delta = clock.getDelta();
 	timeSinceFirework += delta;
 	
-	if (Math.random() > .99 && toExplode < 5) {
+	if (Math.random() > .99 && toExplode < 10) {
 		var tmp = new firework();
 		tmp.material.color = tmp.color;
 		scene.add(tmp.mesh);
@@ -45,7 +50,10 @@ function render() {
 	for (var i = 0; i < fireworks.length; ++i) {
 		var f = fireworks[i];
 		f.lifetime += delta;
-		if (f.velocity.y < -5) {
+		if (!f.explodable && FADE) {
+			f.material.color = f.material.color.lerp(new THREE.Color(0, 0, 0), (1/FADE_RATE) * f.lifetime);
+		}
+		if (f.velocity.y < -5 || f.material.color.equals(new THREE.Color(0, 0, 0))) {
 			scene.remove(f.mesh);
 			fireworks.splice(i, 1);
 		}
@@ -61,7 +69,7 @@ function render() {
 	for (var i = 0; i < fireworkLights.length; ++i) {
 		var l = fireworkLights[i];
 		l.lifetime += delta;
-		l.light.intensity = clamp(1/(l.lifetime*2), 0, .5);
+		l.light.intensity = clamp(1/(l.lifetime*2), 0, 1);
 		if (l.lifetime > 5) {
 			scene.remove(l.light);
 			fireworkLights.splice(i, 1);

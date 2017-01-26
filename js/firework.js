@@ -1,6 +1,18 @@
 function firework() {
-	this.geometry = new THREE.SphereGeometry(0.02, 0.02, 0.02);
-	this.material = new THREE.PointsMaterial();
+	this.geometry = new THREE.SphereBufferGeometry(1, 1, 1);
+	this.velocities = new Float32Array([
+		Math.random() * 10 - 5, 9, Math.random() * 5 - 2.5]);
+	this.lifetime = new Float32Array([0]);
+	this.color = new Float32Array([
+		(Math.random() + 1) / 2, (Math.random() + 1) / 2, (Math.random() + 1) / 2 ]);
+	this.geometry.addAttribute('velocity', new THREE.BufferAttribute(this.velocities, 3));
+	this.geometry.addAttribute('lifetime', new THREE.BufferAttribute(this.lifetime, 1));
+	this.geometry.addAttribute('customColor', new THREE.BufferAttribute(this.color, 3));
+	this.material = new THREE.ShaderMaterial( {
+		uniforms: uniforms,
+		vertexShader: require(['js/text!../glsl/firework-vert.glsl']),
+		fragmentShader: require(['js/text!../glsl/firework-frag.glsl'])
+	} );
 	this.mesh = new THREE.Mesh(this.geometry, this.material);
 	this.color = new THREE.Color( (Math.random() + 1) / 2, (Math.random() + 1) / 2, (Math.random() + 1) / 2 );
 	this.mesh.position = new THREE.Vector3( 0, 0, 0 );
@@ -20,31 +32,27 @@ function flash(parent) {
 }
 
 function explode(f) {
-	// calculate momentum conservation
-	// randomly select new velocities for all but 1 particle
-	if (EXPLODE_MOMENTUM) {
+	if (svars.EXPLODE_MOMENTUM) {
 	var new_v = [];
-	for (var i = 0; i < EXPLODE_PARTICLES - 1; ++i) {
+	for (var i = 0; i < svars.EXPLODE_PARTICLES - 1; ++i) {
 		new_v[i] = new THREE.Vector3(
 			Math.random() * 3 - 1.5, Math.random() * 4 - 1, Math.random() * 3 - 1.5);
 	}
-	// add velocities of all but one particle
 	var sum = new THREE.Vector3(0, 0, 0);
-	for (var i = 0; i < EXPLODE_PARTICLES - 1; ++i) {
+	for (var i = 0; i < svars.EXPLODE_PARTICLES - 1; ++i) {
 		sum = sum.add(new_v[i]);
 	}
-	// final particle has velocity of original firework - sum
-	new_v[EXPLODE_PARTICLES - 1] = f.velocity.multiplyScalar(EXPLODE_PARTICLES).sub(sum);
+	new_v[svars.EXPLODE_PARTICLES - 1] = f.velocity.multiplyScalar(svars.EXPLODE_PARTICLES).sub(sum);
 	}
 	var l = new flash(f);
 	fireworkLights.push(l);
 	scene.add(l.light);
-	for (var i = 0; i < EXPLODE_PARTICLES; ++i) {
+	for (var i = 0; i < svars.EXPLODE_PARTICLES; ++i) {
 		var tmp = new firework();
 		tmp.mesh.position.x = f.mesh.position.x;
 		tmp.mesh.position.y = f.mesh.position.y;
 		tmp.mesh.position.z = f.mesh.position.z;
-		if (EXPLODE_MOMENTUM) {
+		if (svars.EXPLODE_MOMENTUM) {
 			tmp.velocity = new_v[i];
 		} else {
 			tmp.velocity = new THREE.Vector3(

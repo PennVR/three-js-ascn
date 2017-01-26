@@ -1,5 +1,5 @@
 function terrain() {
-	this.geometry = new THREE.PlaneGeometry(1000, 1000, 100, 100);
+	this.geometry = new THREE.PlaneGeometry(100, 100, 100, 100);
 	this.material = new THREE.MeshLambertMaterial( {color: 0x8692a5, wireframe: false, side: THREE.DoubleSide} );
 	this.mesh = new THREE.Mesh(this.geometry, this.material);
 	this.mesh.position = new THREE.Vector3(0, 0, 0);

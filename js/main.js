@@ -1,7 +1,9 @@
-var EXPLODE_PARTICLES = 20;
-var FADE = true;
-var FADE_RATE = 100;
-var EXPLODE_MOMENTUM = false;
+var SCENE_VARS = function() {
+	this.EXPLODE_PARTICLES = 25;
+	this.FADE = true;
+	this.FADE_RATE = 1000;
+	this.EXPLODE_MOMENTUM = false;
+}
 
 var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -13,11 +15,22 @@ var stats = new Stats();
 stats.showPanel(0);
 document.body.appendChild(stats.dom);
 
+var svars = new SCENE_VARS();
+var gui = new dat.GUI();
+gui.add(svars, 'EXPLODE_PARTICLES');
+gui.add(svars, 'FADE');
+gui.add(svars, 'FADE_RATE');
+gui.add(svars, 'EXPLODE_MOMENTUM');
+
 function clamp(val, min, max) {
 	if (val < min) { return min; }
 	else if (val > max) { return max; }
 	else { return val; }
 }
+
+var uniforms = {
+	delta: { value: 0 }
+};
 
 // initialize terrain
 var t = new terrain();
@@ -31,49 +44,16 @@ camera.position.z = 5;
 var clock = new THREE.Clock();
 var timeSinceFirework = 0;
 var toExplode = 0;
-
+var f;
 function render() {
 	stats.begin();
 	requestAnimationFrame( render );
 	var delta = clock.getDelta();
-	timeSinceFirework += delta;
-	
-	if (Math.random() > .99 && toExplode < 10) {
-		var tmp = new firework();
-		tmp.material.color = tmp.color;
-		scene.add(tmp.mesh);
-		fireworks.push(tmp);
-		timeSinceFirework = 0;
-		toExplode++;
-	}
+	uniforms.delta.value = delta;
 
-	for (var i = 0; i < fireworks.length; ++i) {
-		var f = fireworks[i];
-		f.lifetime += delta;
-		if (!f.explodable && FADE) {
-			f.material.color = f.material.color.lerp(new THREE.Color(0, 0, 0), (1/FADE_RATE) * f.lifetime);
-		}
-		if (f.velocity.y < -5 || f.material.color.equals(new THREE.Color(0, 0, 0))) {
-			scene.remove(f.mesh);
-			fireworks.splice(i, 1);
-		}
-		if (f.velocity.y < 0.001 && f.explodable) {
-			explode(f);
-			toExplode--;
-			scene.remove(f.mesh);
-			fireworks.splice(i, 1);
-		}
-		updateKin(f, delta);
-	}
-
-	for (var i = 0; i < fireworkLights.length; ++i) {
-		var l = fireworkLights[i];
-		l.lifetime += delta;
-		l.light.intensity = clamp(1/(l.lifetime*2), 0, 1);
-		if (l.lifetime > 5) {
-			scene.remove(l.light);
-			fireworkLights.splice(i, 1);
-		}
+	if (Math.random() < .90) {
+		f = new firework();
+		//scene.add(f.mesh);
 	}
 
 	renderer.render( scene, camera );

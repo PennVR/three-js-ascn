@@ -1,7 +1,7 @@
-var EXPLODE_PARTICLES = 20;
+var MAX_PARTICLES = 10;
+var EXPLODE_PARTICLES = 50;
 var FADE = true;
-var FADE_RATE = 100;
-var EXPLODE_MOMENTUM = false;
+var FADE_RATE = 2000;
 
 var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -19,14 +19,21 @@ function clamp(val, min, max) {
 	else { return val; }
 }
 
+// add ambient light
+var ambient = new THREE.AmbientLight( 0x404040 );
+//scene.add( ambient );
+
 // initialize terrain
 var t = new terrain();
 scene.add(t.mesh);
 
+var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
+scene.add( directionalLight );
+
 var fireworks = [];
 var fireworkLights = [];
 
-camera.position.z = 5;
+camera.position.y = 0;
 
 var clock = new THREE.Clock();
 var timeSinceFirework = 0;
@@ -37,8 +44,12 @@ function render() {
 	requestAnimationFrame( render );
 	var delta = clock.getDelta();
 	timeSinceFirework += delta;
-	
-	if (Math.random() > .99 && toExplode < 10) {
+	var lookAt = camera.getWorldDirection();
+
+	camera.position.x += lookAt.x * .1;
+	camera.position.z += lookAt.z * .1;
+
+	if (Math.random() > .95 && toExplode < MAX_PARTICLES) {
 		var tmp = new firework();
 		tmp.material.color = tmp.color;
 		scene.add(tmp.mesh);

@@ -2,9 +2,9 @@ function terrain() {
 	var width = 100;
 	var height = 100;
 	this.geometry = new THREE.PlaneGeometry(1000, 1000, width, height);
-	this.material = new THREE.MeshBasicMaterial( {vertexColors: THREE.VertexColors,
-												  wireframe: false,
-												  side: THREE.DoubleSide} );
+	this.material = new THREE.MeshLambertMaterial( {vertexColors: THREE.VertexColors,
+												    wireframe: false,
+												    side: THREE.DoubleSide} );
 	this.mesh = new THREE.Mesh(this.geometry, this.material);
 	this.mesh.position = new THREE.Vector3(0, 0, 0);
 	this.mesh.position.x = 0;

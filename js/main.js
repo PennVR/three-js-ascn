@@ -1,4 +1,4 @@
-var MAX_PARTICLES = 10;
+var MAX_PARTICLES = 100;
 var EXPLODE_PARTICLES = 50;
 var FADE = true;
 var FADE_RATE = 2000;
@@ -8,6 +8,16 @@ var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHei
 var renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
+
+var controls = new THREE.VRControls( camera );
+var effect = new THREE.VREffect( renderer );
+
+if ( WEBVR.isAvailable() === false ) {
+	document.body.appendChild( WEBVR.getMessage() );
+} else {
+	document.body.appendChild( WEBVR.getButton( effect ) );
+}
+
 
 var stats = new Stats();
 stats.showPanel(0);
@@ -19,15 +29,11 @@ function clamp(val, min, max) {
 	else { return val; }
 }
 
-// add ambient light
-var ambient = new THREE.AmbientLight( 0x404040 );
-//scene.add( ambient );
-
 // initialize terrain
 var t = new terrain();
 scene.add(t.mesh);
 
-var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
+var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.1 );
 scene.add( directionalLight );
 
 var fireworks = [];
@@ -41,7 +47,7 @@ var toExplode = 0;
 
 function render() {
 	stats.begin();
-	requestAnimationFrame( render );
+	effect.requestAnimationFrame( render );
 	var delta = clock.getDelta();
 	timeSinceFirework += delta;
 	var lookAt = camera.getWorldDirection();
@@ -86,8 +92,8 @@ function render() {
 			fireworkLights.splice(i, 1);
 		}
 	}
-
-	renderer.render( scene, camera );
+	controls.update();
+	effect.render( scene, camera );
 	stats.end();
 }
 render();

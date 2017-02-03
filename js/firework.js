@@ -5,10 +5,12 @@ function firework() {
 	this.color = new THREE.Color( (Math.random() + 1) / 2, (Math.random() + 1) / 2, (Math.random() + 1) / 2 );
 	this.color = new THREE.Color(Math.random(), Math.random(), Math.random());
 	this.mesh.position = new THREE.Vector3( 0, 0, 0 );
-	this.mesh.position.x = camera.position.x + Math.random() * 8 - 4;
+	var radius = Math.random() * 100 + 400; // radius^2 from 10 to 20
+	var theta = Math.random() * 2 * Math.PI; // random angle;
+	this.mesh.position.x = camera.position.x + Math.sqrt(radius) * Math.cos(theta);
 	this.mesh.position.y = camera.position.y - 7;
-	this.mesh.position.z = camera.position.z + Math.random() * 20 - 40;
-	this.velocity = new THREE.Vector3( Math.random() * 10 - 5, 9, Math.random() * 5 - 2.5 );
+	this.mesh.position.z = camera.position.z + Math.sqrt(radius) * Math.sin(theta);
+	this.velocity = new THREE.Vector3( 0, Math.random() * 10 + 10, 0 );
 	this.lifetime = 0;
 	this.explodable = true;
 }
@@ -20,10 +22,11 @@ function flash(parent) {
 	this.lifetime = 0;
 }
 
+var booms = [];
+for (var i = 0; i < 100; ++i) {
+	booms.push(new Audio('./boom.mp3'));
+}
 function explode(f) {
-	// var l = new flash(f);
-	// fireworkLights.push(l);
-	// scene.add(l.light);
 	for (var i = 0; i < EXPLODE_PARTICLES; ++i) {
 		var tmp = new firework();
 		tmp.mesh.position.x = f.mesh.position.x;
@@ -38,6 +41,7 @@ function explode(f) {
 		scene.add(tmp.mesh);
 		fireworks.push(tmp);
 	}
+	//booms[Math.floor(Math.random() * 100)].play();
 }
 
 function updateKin(f, delta) {

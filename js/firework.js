@@ -10,7 +10,7 @@ function firework() {
 	this.mesh.position.x = camera.position.x + Math.sqrt(radius) * Math.cos(theta);
 	this.mesh.position.y = camera.position.y - 7;
 	this.mesh.position.z = camera.position.z + Math.sqrt(radius) * Math.sin(theta);
-	this.velocity = new THREE.Vector3( 0, Math.random() * 10 + 10, 0 );
+	this.velocity = new THREE.Vector3( 0, Math.random() * 5 + 15, 0 );
 	this.lifetime = 0;
 	this.explodable = true;
 }

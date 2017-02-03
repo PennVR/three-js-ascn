@@ -9,7 +9,8 @@ var renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 
-var controls = new THREE.VRControls( camera );
+var vr_controls = new THREE.VRControls( camera );
+var mouse_controls = new THREE.PointerLockControls( camera );
 var effect = new THREE.VREffect( renderer );
 
 if ( WEBVR.isAvailable() === false ) {
@@ -29,6 +30,45 @@ function clamp(val, min, max) {
 	else { return val; }
 }
 
+
+var instructions = document.getElementById( 'instructions' );
+var havePointerLock = 'pointerLockElement' in document || 'mozPointerLockElement' in document || 'webkitPointerLockElement' in document;
+if ( havePointerLock ) {
+	var element = document.body;
+	var pointerlockchange = function ( event ) {
+		if ( document.pointerLockElement === element || document.mozPointerLockElement === element || document.webkitPointerLockElement === element ) {
+			controlsEnabled = true;
+			mouse_controls.enabled = true;
+			blocker.style.display = 'none';
+		} else {
+			mouse_controls.enabled = false;
+			blocker.style.display = '-webkit-box';
+			blocker.style.display = '-moz-box';
+			blocker.style.display = 'box';
+			instructions.style.display = '';
+		}
+	};
+	var pointerlockerror = function ( event ) {
+		instructions.style.display = '';
+	};
+	// Hook pointer lock state change events
+	document.addEventListener( 'pointerlockchange', pointerlockchange, false );
+	document.addEventListener( 'mozpointerlockchange', pointerlockchange, false );
+	document.addEventListener( 'webkitpointerlockchange', pointerlockchange, false );
+	document.addEventListener( 'pointerlockerror', pointerlockerror, false );
+	document.addEventListener( 'mozpointerlockerror', pointerlockerror, false );
+	document.addEventListener( 'webkitpointerlockerror', pointerlockerror, false );
+	instructions.addEventListener( 'click', function ( event ) {
+		instructions.style.display = 'none';
+		// Ask the browser to lock the pointer
+		element.requestPointerLock = element.requestPointerLock || element.mozRequestPointerLock || element.webkitRequestPointerLock;
+		element.requestPointerLock();
+	}, false );
+} else {
+	instructions.innerHTML = 'Your browser doesn\'t seem to support Pointer Lock API';
+}
+
+
 // initialize terrain
 var t = new terrain();
 scene.add(t.mesh);
@@ -45,6 +85,8 @@ var clock = new THREE.Clock();
 var timeSinceFirework = 0;
 var toExplode = 0;
 
+scene.add(mouse_controls.getObject());
+
 function render() {
 	stats.begin();
 	effect.requestAnimationFrame( render );
@@ -52,8 +94,13 @@ function render() {
 	timeSinceFirework += delta;
 	var lookAt = camera.getWorldDirection();
 
-	camera.position.x += lookAt.x * .1;
-	camera.position.z += lookAt.z * .1;
+	if (effect.isPresenting) {
+		// not in vr mode, use mouse to contorl lookat
+		scene.remove(mouse_controls.getObject());
+	}
+
+	//camera.position.x += lookAt.x * .1;
+	//camera.position.z += lookAt.z * .1;
 
 	if (Math.random() > .95 && toExplode < MAX_PARTICLES) {
 		var tmp = new firework();
@@ -92,7 +139,7 @@ function render() {
 			fireworkLights.splice(i, 1);
 		}
 	}
-	controls.update();
+	vr_controls.update();
 	effect.render( scene, camera );
 	stats.end();
 }

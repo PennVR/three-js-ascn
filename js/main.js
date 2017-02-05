@@ -68,6 +68,14 @@ if ( havePointerLock ) {
 	instructions.innerHTML = 'Your browser doesn\'t seem to support Pointer Lock API';
 }
 
+// add moon 
+var spriteMap = new THREE.TextureLoader().load('./res/moon.jpg');
+var spriteMaterial = new THREE.SpriteMaterial( {map: spriteMap, color: 0xffffff } );
+var sprite = new THREE.Sprite(spriteMaterial);
+sprite.position.x = 20;
+sprite.position.z = 20;
+sprite.position.y = 30;
+scene.add(sprite);
 
 // initialize terrain
 var t = new terrain();
@@ -95,7 +103,7 @@ function render() {
 	var lookAt = camera.getWorldDirection();
 
 	if (effect.isPresenting) {
-		// not in vr mode, use mouse to contorl lookat
+		// not in vr mode, use mouse to control lookat
 		scene.remove(mouse_controls.getObject());
 	}
 

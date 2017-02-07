@@ -1,7 +1,17 @@
-var MAX_PARTICLES = 100;
-var EXPLODE_PARTICLES = 50;
-var FADE = true;
-var FADE_RATE = 2000;
+var GUI_VARS = function() {
+	this.MAX_PARTICLES = 100;
+	this.EXPLODE_PARTICLES = 50;
+	this.FADE = true;
+	this.FADE_RATE = 2000;
+}
+
+var SVARS = new GUI_VARS();
+
+var gui = new dat.GUI();
+gui.add(SVARS, 'MAX_PARTICLES');
+gui.add(SVARS, 'EXPLODE_PARTICLES');
+gui.add(SVARS, 'FADE');
+gui.add(SVARS, 'FADE_RATE');
 
 var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -23,13 +33,6 @@ if ( WEBVR.isAvailable() === false ) {
 var stats = new Stats();
 stats.showPanel(0);
 document.body.appendChild(stats.dom);
-
-function clamp(val, min, max) {
-	if (val < min) { return min; }
-	else if (val > max) { return max; }
-	else { return val; }
-}
-
 
 var instructions = document.getElementById( 'instructions' );
 var havePointerLock = 'pointerLockElement' in document || 'mozPointerLockElement' in document || 'webkitPointerLockElement' in document;
@@ -107,12 +110,8 @@ function render() {
 		scene.remove(mouse_controls.getObject());
 	}
 
-	//camera.position.x += lookAt.x * .1;
-	//camera.position.z += lookAt.z * .1;
-
-	if (Math.random() > .95 && toExplode < MAX_PARTICLES) {
-		var tmp = new firework();
-		tmp.material.color = tmp.color;
+	if (Math.random() > .95 && toExplode < SVARS.MAX_PARTICLES) {
+		var tmp = new Firework(true);
 		scene.add(tmp.mesh);
 		fireworks.push(tmp);
 		timeSinceFirework = 0;
@@ -122,31 +121,22 @@ function render() {
 	for (var i = 0; i < fireworks.length; ++i) {
 		var f = fireworks[i];
 		f.lifetime += delta;
-		if (!f.explodable && FADE) {
-			f.material.color = f.material.color.lerp(new THREE.Color(0, 0, 0), (1/FADE_RATE) * f.lifetime);
+		if (!f.explodable && SVARS.FADE) {
+			f.material.color = f.material.color.lerp(new THREE.Color(0, 0, 0), (1/SVARS.FADE_RATE) * f.lifetime);
 		}
 		if (f.velocity.y < -5 || f.material.color.equals(new THREE.Color(0, 0, 0))) {
 			scene.remove(f.mesh);
 			fireworks.splice(i, 1);
 		}
 		if (f.velocity.y < 0.001 && f.explodable) {
-			explode(f);
+			f.explode();
 			toExplode--;
 			scene.remove(f.mesh);
 			fireworks.splice(i, 1);
 		}
-		updateKin(f, delta);
+		f.updateKin(delta);
 	}
 
-	for (var i = 0; i < fireworkLights.length; ++i) {
-		var l = fireworkLights[i];
-		l.lifetime += delta;
-		l.light.intensity = clamp(1/(l.lifetime*2), 0, 1);
-		if (l.lifetime > 5) {
-			scene.remove(l.light);
-			fireworkLights.splice(i, 1);
-		}
-	}
 	vr_controls.update();
 	effect.render( scene, camera );
 	stats.end();

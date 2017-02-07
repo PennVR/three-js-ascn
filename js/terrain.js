@@ -75,10 +75,6 @@ function lerp(a, b, x) {
 	return a + x * (b - a);
 }
 
-function ease(t) {
-	return 6*Math.pow(t, 5) - 15*Math.pow(t, 4) + 10*Math.pow(t, 3);
-}
-
 function getColor(height) {
 	height = -height;
 	var BLUE = new THREE.Color(0x5196ff);
@@ -95,9 +91,4 @@ var gradSeed = Math.random() * 100;
 function gradHash(hash) {
 	var x = Math.abs(Math.floor(Math.sin(hash) * gradSeed));
 	return x % 8;
-}
-
-function random() {
-    var x = Math.sin(seed++) * 10000;
-    return x - Math.floor(x);
 }
